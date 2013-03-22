@@ -1,0 +1,46 @@
+#include "../lib/LinkedList.h"
+
+#ifndef _ODAO_H_
+#define _ODAO_H_
+
+enum datatype
+{
+	INTEGER, CHARACTER
+};
+
+typedef enum datatype datatype_t;
+
+struct field
+{
+	char* fieldName;
+	datatype_t type;
+};
+
+typedef struct field field_t;
+
+typedef field_t* pfield;
+
+struct DAOplan
+{
+	char* structName;
+	plinked_list fields;
+	char* host;
+};
+
+typedef struct DAOplan DAOplan_t;
+
+typedef DAOplan_t *pDAOplan;
+
+DAOplan_t* registerDAO(char* structName);
+
+/**
+ * Generates files <daoname>.c, <daoname>.h, <daoname>DAO.c, <daoname>DAO.h
+ * and tables in defined database
+ */
+void generate(pDAOplan daoplan);
+
+void daoplan_add_int(pDAOplan daoplan, char* fieldname);
+
+void daoplan_add_string(pDAOplan daoplan, char* fieldname, int len);
+
+#endif
