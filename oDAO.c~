@@ -1,0 +1,71 @@
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <my_global.h>
+#include <mysql.h>
+#include "include/oDAO.h"
+#include "lib/LinkedList.h"
+
+MYSQL *connection;
+
+int connecttodb(char* host, char* user, char* pwd, char* dbname)
+{
+	MYSQL conn;
+	
+	if(host == NULL)
+	{
+		host = "localhost";
+	}
+	
+	connection = &conn;
+	
+	connection = mysql_init(connection);
+	if(!mysql_real_connect(connection, "localhost", "root", "Schaatz1409", NULL,
+		0, NULL, 0))
+	{
+		//printf("Error %u: %s\n", mysql_errno(connection), mysql_error(connection));
+		exit(1);
+	}
+	
+	mysql_query(connection, "CREATE DATABASE testDB");
+}
+
+void disconnectfromdb()
+{
+	if(connection != NULL)
+		mysql_close(connection);
+}
+
+pDAOplan registerDAO(char* structName)
+{
+	pDAOplan plan;
+	plinked_list list;
+
+	plan = malloc(sizeof(DAOplan_t));
+	plan->structName = structName;
+	list = init_list();
+	plan->fields = list;
+
+	return plan;
+}
+
+void daoplan_add_int(pDAOplan daoplan, char* fieldname)
+{
+	pfield field;
+
+	field = malloc(sizeof(pfield));
+	field->fieldName = fieldname;
+	field->type = INTEGER;
+
+	list_append(daoplan->fields, field);
+}
+
+void daoplan_add_string(pDAOplan daoplan, char* fieldname, int len)
+{
+
+}
+
+void generate(pDAOplan daoplan)
+{
+
+}

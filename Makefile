@@ -1,5 +1,5 @@
 all: main.o oDAO.o
-	gcc -Llib -o oDAO main.o oDAO.o -llinkedlist -lodbc
+	gcc -Llib -isystem /usr/include/mysql -o oDAO main.o oDAO.o -llinkedlist -lncurses `mysql_config --cflags --libs` 
 	rm main.o
 	rm oDAO.o
 

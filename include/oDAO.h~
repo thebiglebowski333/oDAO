@@ -3,13 +3,9 @@
 #ifndef _ODAO_H_
 #define _ODAO_H_
 
-#define CONNECTION_ESTABLISHED 0
-
 enum datatype
 {
-	INTEGER, 
-	CHARACTER,
-	STRING
+	INTEGER, CHARACTER
 };
 
 typedef enum datatype datatype_t;
@@ -18,8 +14,6 @@ struct field
 {
 	char* fieldName;
 	datatype_t type;
-	int length;
-	int precision;
 };
 
 typedef struct field field_t;
@@ -37,18 +31,9 @@ typedef struct DAOplan DAOplan_t;
 
 typedef DAOplan_t *pDAOplan;
 
-struct DB_values {
-	char* host;
-	char* user;
-	char* pwd;
-	char* dbname;
-};
+int connecttodb(char* host, char* user, char* pwd, char* dbname);
 
-typedef struct DB_values DB_values_t;
-
-typedef DB_values_t* pDB_values;
-
-int executeDDL(pDB_values values, char** stmts, int stmtcount);
+void disconnectfromdb();
 
 DAOplan_t* registerDAO(char* structName);
 
@@ -61,7 +46,5 @@ void generate(pDAOplan daoplan);
 void daoplan_add_int(pDAOplan daoplan, char* fieldname);
 
 void daoplan_add_string(pDAOplan daoplan, char* fieldname, int len);
-
-void daoplan_add_char(pDAOplan daoplan, char* fieldname, int len);
 
 #endif

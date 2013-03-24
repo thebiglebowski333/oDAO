@@ -40,9 +40,6 @@
 		<Unit filename="include/oDAO.h">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="lib/LinkedList.h">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Extensions>
 			<code_completion />
 			<debugger />

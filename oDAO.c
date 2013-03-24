@@ -1,88 +1,59 @@
-#include "include/oDAO.h"
-#include "lib/LinkedList.h"
 #include <stdlib.h>
 #include <stdio.h>
-#include <sql.h>
-#include <sqlext.h>
 #include <string.h>
+#include <my_global.h>
+#include <mysql.h>
+#include <ncurses.h>
+#include "include/oDAO.h"
+#include "lib/LinkedList.h"
 
-void connect(char* dbstring)
+#define DDL_MAX_LENGTH 65536
+
+char* concat(char* str1, char* str2) 
 {
-	SQLHENV env;
-	SQLHDBC dbc;
-	SQLHSTMT stmt;
-	SQLRETURN retval;
-	long res;
-	char* output;
-	SQLSMALLINT outlen;
-	SQLSMALLINT cols;
-	SQLUSMALLINT i;
-	SQLLEN indicator;
-	int row = 0;
+	char* merged;
+	int len;
+	int i;
+	
+	len = strlen(str1) + strlen(str2) + 1;
+	merged = malloc(sizeof(char)*len);
+	
+}
 
-	char *connectionString =
-			"DRIVER={MySQL ODBC 3.51 Driver};\
-		                   SERVER=localhost;\
-		                   DATABASE=Pension;\
-		                   USER=root;\
-		                   PASSWORD=Schaatz1409;\
-		                   OPTION=3;";
-
-	output = malloc(255 * sizeof(char));
-
-	SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &env);
-
-	SQLSetEnvAttr(env, SQL_ATTR_ODBC_VERSION, (void*) SQL_OV_ODBC3, 0);
-
-	retval = SQLAllocHandle(SQL_HANDLE_DBC, env, &dbc);
-	if (retval != SQL_SUCCESS)
+int executeDDL(pDB_values values, char **stmts, int stmtcount)
+{
+	MYSQL conn;
+	MYSQL *connection;
+	int i;
+	
+	if(values->host == NULL)
 	{
-		printf("Error...\n");
+		values->host = "localhost";
 	}
-	else
+	
+	connection = &conn;
+	
+	connection = mysql_init(connection);
+	if(!mysql_real_connect(connection, values->host, values->user, values->pwd, values->dbname, 0, NULL, 0))
 	{
-		printf("%d\n", retval);
-		res = SQLDriverConnect(dbc, 0, (SQLCHAR*) connectionString,
-				strlen(connectionString), output, 255, &outlen,
-				SQL_DRIVER_COMPLETE);
-		if (retval != SQL_SUCCESS)
-		{
-			printf("Error while connecting...\n");
-		}
-		else
-		{
-			printf("connected\n");
-			retval = SQLAllocHandle(SQL_HANDLE_STMT, dbc, &stmt);
-			printf("%d\n", retval);
-			retval = SQLTables(stmt, NULL, 0, NULL, 0, NULL, 0, "TABLE", SQL_NTS);
-			printf("%d\n", retval);
-			SQLNumResultCols(stmt, &cols);
-
-			printf("while begin\n");
-			while (SQL_SUCCEEDED(retval = SQLFetch(stmt)))
-			{
-				printf("Row %d\n", row++);
-				for (i = 0; i <= cols; i++)
-				{
-					retval = SQLGetData(stmt, i, SQL_C_CHAR, output, 255,
-							&indicator);
-					if (SQL_SUCCEEDED(retval))
-					{
-						if (&indicator == NULL )
-							strcpy(output, "NULL");
-						printf("Column %u: %s", i, output);
-					}
-				}
-			}
-
-			printf("while end\n", retval);
-
-			SQLDisconnect(dbc);
-			SQLFreeHandle(SQL_HANDLE_STMT, &stmt);
-			SQLFreeHandle(SQL_HANDLE_DBC, &dbc);
-			SQLFreeHandle(SQL_HANDLE_ENV, &env);
-		}
+		printw("%s", mysql_error(connection));
+		refresh();
+		getchar();
+		return 1;	
+	} else {
+		printw("connection established\n");
+		refresh();
 	}
+	
+	for(i=0; i<stmtcount; i++) 
+	{
+		mysql_query(connection, stmts[i]);
+		printw("%s\n", stmts[i]);
+		refresh();
+	}
+	
+	mysql_close(connection);
+	return 0;
 }
 
 pDAOplan registerDAO(char* structName)
@@ -100,21 +71,83 @@ pDAOplan registerDAO(char* structName)
 
 void daoplan_add_int(pDAOplan daoplan, char* fieldname)
 {
-	pfield field;
+	pfield feld;
 
-	field = malloc(sizeof(pfield));
-	field->fieldName = fieldname;
-	field->type = INTEGER;
+	feld = malloc(sizeof(pfield));
+	feld->fieldName = fieldname;
+	feld->type = INTEGER;
 
-	list_append(daoplan->fields, field);
+	list_append(daoplan->fields, feld);
 }
 
 void daoplan_add_string(pDAOplan daoplan, char* fieldname, int len)
 {
+	pfield feld;
 
+	feld = malloc(sizeof(pfield));
+	feld->fieldName = fieldname;
+	feld->type = STRING;
+	feld->length = len;
+
+	list_append(daoplan->fields, feld);
+}
+
+void daoplan_add_char(pDAOplan daoplan, char* fieldname, int len)
+{
+	pfield feld;
+
+	feld = malloc(sizeof(pfield));
+	feld->fieldName = fieldname;
+	feld->type = CHARACTER;
+	feld->length = len;
+
+	list_append(daoplan->fields, feld);
 }
 
 void generate(pDAOplan daoplan)
 {
-
+	int i;
+	pfield vfield;
+	char* ddl = malloc(sizeof(char)*DDL_MAX_LENGTH);
+	char numbuf[16];
+	
+	strcpy(ddl, "CREATE TABLE ");
+	strcat(ddl, daoplan->structName);
+    strcat(ddl, " (\n\tID INT NOT NULL\n");
+    strcat(ddl, "\t, Create_Timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP\n");
+    strcat(ddl, "\t, Created_By VARCHAR(255) NOT NULL\n");
+    strcat(ddl, "\t, Update_Timestamp TIMESTAMP NULL\n");
+    strcat(ddl, "\t, Updated_By VARCHAR(255) NULL\n");
+	
+	for(i=0; i<daoplan->fields->size; i++)
+	{
+		vfield = (pfield) list_get(daoplan->fields, i);
+		switch(vfield->type) 
+		{
+			case INTEGER:
+				strcat(ddl, "\t, ");
+				strcat(ddl, vfield->fieldName);
+				strcat(ddl, " INT NULL\n");
+				break;
+			case CHARACTER:
+				strcat(ddl, "\t, ");
+				strcat(ddl, vfield->fieldName);
+				strcat(ddl, " CHAR(");
+				snprintf (numbuf, (size_t)16, "%d", vfield->length);
+				strcat(ddl, numbuf);
+				strcat(ddl, ") NULL\n");
+				break;
+			case STRING:
+				strcat(ddl, "\t, ");
+				strcat(ddl, vfield->fieldName);
+				strcat(ddl, " VARCHAR(");
+				snprintf (numbuf, (size_t)16, "%d", vfield->length);
+				strcat(ddl, numbuf);
+				strcat(ddl, ") NULL\n");
+				break;
+		}
+		refresh();
+	}
+	strcat(ddl, ");\n");
+	printw("%s\n", ddl);
 }

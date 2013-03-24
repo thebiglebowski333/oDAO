@@ -1,0 +1,73 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include "include/oDAO.h"
+#include "lib/LinkedList.h"
+#include <curses.h>
+
+#define PASS_SIZE 64
+
+#define ECHO_ON 1
+#define ECHO_OFF 0
+#define BACK_SPACE 127
+
+char* my_getpass(int echostate);
+
+int main()
+{
+/*	pDAOplan plan;*/
+	char* pass;
+	char c;
+	initscr();	
+	printw("Enter password: ");
+	pass = my_getpass(ECHO_OFF);
+	
+
+	
+	//cbreak();
+	//noecho();
+	
+	
+	
+	//printw("*");
+	
+	connecttodb("localhost", "root", pass, NULL);
+	printw("connected");
+	refresh();
+	disconnectfromdb();
+/*	plan = registerDAO("DVD");*/
+/*	printf("%s\n", plan->structName);*/
+	return EXIT_SUCCESS;
+}
+
+char* my_getpass(int echostate)
+{
+	char c;
+	int i = 0;
+	char* pass;
+	
+	pass = malloc(sizeof(char) * PASS_SIZE);
+
+	noecho();
+	
+	while(i<PASS_SIZE && (c=getch()) != '\n')
+	{
+		if(c == BACK_SPACE) 
+		{
+			if(i > 0) 
+			{
+				i--;
+				if(echostate == ECHO_ON)
+					printw("\b \b");	
+			}
+		}
+		else {
+			pass[i++] = c;
+			if(echostate == ECHO_ON)
+				printw("*");
+		}
+	}
+	pass[i] = '\0';
+	echo();
+	endwin();
+	return NULL;
+}

@@ -1,0 +1,20 @@
+# depslib dependency file v1.0
+1364036899 source:/home/paul/Git_home/DB/oDAO/main.c
+	<stdio.h>
+	<stdlib.h>
+	"include/oDAO.h"
+	"lib/LinkedList.h"
+
+1364043311 /home/paul/Git_home/DB/oDAO/include/oDAO.h
+	"../lib/LinkedList.h"
+
+1364036899 /home/paul/Git_home/DB/oDAO/lib/LinkedList.h
+
+1364043036 source:/home/paul/Git_home/DB/oDAO/oDAO.c
+	<stdlib.h>
+	<stdio.h>
+	<string.h>
+	<mysql/mysql.h>
+	"include/oDAO.h"
+	"lib/LinkedList.h"
+
