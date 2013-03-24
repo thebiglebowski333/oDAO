@@ -1,0 +1,10 @@
+rename types
+rename fields in enum
+rename function names: DAO_generate
+execute table generation
+split DAO_generate_C, DAO_generate_DB, DAO_generate_H
+parse .c/.h files
+sql in external file with escape character 
+    %sn (structname)
+    %fn (fieldname)
+    %dt (datatype incl. length & precision)
