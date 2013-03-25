@@ -64,4 +64,6 @@ void daoplan_add_string(pDAOplan daoplan, char* fieldname, int len);
 
 void daoplan_add_char(pDAOplan daoplan, char* fieldname, int len);
 
+/* ich hab gehört ich soll mal was comitten */
+
 #endif
